@@ -37,10 +37,6 @@ class Node:
     def toList(self):
         return [self.x, self.z, self.x_connection, self.z_connection]
 
-    def getNode(self, number):
-        if number == self.number:
-            return self
-
     #
     # @x.setter
     # def x(self, value):
@@ -147,6 +143,9 @@ class Load:
     @property
     def node(self):
         return self._mNode
+
+    def toList(self):
+        return []
 
     # @x.setter
     # def x(self, value):

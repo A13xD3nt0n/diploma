@@ -3,6 +3,7 @@ from data_models import Node, Rod, Load, nodes, rods, loads
 from PyQt5.QtWidgets import QWidget, QApplication, QCheckBox, QVBoxLayout, \
     QPushButton, QTableWidget, QLabel, QLineEdit, QTableWidgetItem, \
     QTabWidget, QComboBox
+from PyQt5.Qt import QIntValidator
 
 
 class MainMenu(QWidget):
@@ -59,9 +60,12 @@ class NodeMenu(QWidget):
         self.add_node_form.show()
 
     def delete_node(self):
-        pass
+        nodes.pop(self.nodes_table.currentRow())
+        self.update_table()
 
     def changeEvent(self, *args, **kwargs):
+        if len(nodes) == 0:
+            self.delete_button.setEnabled(False)
         if self.node_index != len(nodes):
             self.update_table()
 
@@ -85,7 +89,9 @@ class AddNodeForm(QWidget):
         self.x_label = QLabel('X:')
         self.z_label = QLabel('Z:')
         self.x_textfield = QLineEdit()
+        self.x_textfield.setValidator(QIntValidator())
         self.z_textfield = QLineEdit()
+        self.z_textfield.setValidator(QIntValidator())
         self.connection_label = QLabel('Связи:')
         self.x_checkbox = QCheckBox('X')
         self.z_checkbox = QCheckBox('Z')
@@ -134,9 +140,12 @@ class RodMenu(QWidget):
         self.add_rod_form.show()
 
     def delete_rod(self):
-        pass
+        rods.pop(self.rods_table.currentRow())
+        self.update_table()
 
     def changeEvent(self, *args, **kwargs):
+        if len(rods) == 0:
+            self.delete_button.setEnabled(False)
         if self.rod_index != len(rods):
             self.update_table()
 
@@ -216,7 +225,24 @@ class LoadsMenu(QWidget):
         self.add_load_form.show()
 
     def delete_load(self):
-        pass
+        loads.pop(self.loads_table.currentRow())
+        self.update_table()
+
+    def changeEvent(self, *args, **kwargs):
+        if len(loads) == 0:
+            self.delete_button.setEnabled(False)
+        if self.load_index != len(loads):
+            self.update_table()
+
+    def update_table(self):
+        self.loads_table.setRowCount(len(loads))
+        for i in range(len(loads)):
+            load = loads[i].toList()
+            self.loads_table.setVerticalHeaderItem(i, QTableWidgetItem(
+                str(loads[i].number)))
+            for j in range(len(load)):
+                self.loads_table.setItem(i, j, QTableWidgetItem(str(load[j])))
+        self.loads_table.resizeColumnsToContents()
 
 
 class AddLoadForm(QWidget):
@@ -228,7 +254,9 @@ class AddLoadForm(QWidget):
         self.x_label = QLabel('X:')
         self.z_label = QLabel('Z:')
         self.x_textfield = QLineEdit()
+        self.x_textfield.setValidator(QIntValidator())
         self.z_textfield = QLineEdit()
+        self.z_textfield.setValidator(QIntValidator())
         self.node_index = nodes.__len__()
 
         self.node_cb = QComboBox()
@@ -258,7 +286,18 @@ class AddLoadForm(QWidget):
 class ResultWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.result_table = QTableWidget()
+        self.next_button = QPushButton('Далее')
+        self.back_button = QPushButton('Назад')
 
+        box = QVBoxLayout()
+        box.addWidget(self.result_table)
+        box.addWidget(self.next_button)
+        box.addWidget(self.back_button)
+        self.setLayout(box)
+
+    def set_data(self, data):
+        pass
 
 
 if __name__ == '__main__':

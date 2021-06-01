@@ -1,5 +1,6 @@
 import math
 import numpy
+from openpyxl import load_workbook
 
 
 def decise_numpy(A, R):
@@ -62,6 +63,7 @@ def gaus(N, A, R, DIAG, IER):
                 return
     if IER < 0:
         return
+    print('ПРЯМОЙ И ОБРАТНЫЙ ХОД')
     if IER >= 0:
         for i in range(1, N + 1):
             kl = DIAG[i] + 1
@@ -91,14 +93,47 @@ def gaus(N, A, R, DIAG, IER):
 
 
 if __name__ == '__main__':
+    N = 8,
+    A = [None, math.pow(10, 14),
+         math.pow(10, 14), 9.6,
+         50, 0, -25,
+         33.33,
+         37.8, 0, -25,
+         math.pow(10, 14), -9.6,
+         25.6, 9.6, -12.8, 0, 0, -9.6, -12.8,
+         47.73, 0, -7.2, 9.6, -33.33, 0, -7.2, -9.6],
+    R = [None, 0, 0, 0, -280, 0, 0, 0, 0],
+    DIAG = [None, 1, 2, 4, 7, 8, 11, 13, 20, len(A)],
+    IER = 1
     result = gaus(N=8,
-                  A=[None, 37.8, 9.6, 7.2, -25, 0, 50, 33.33, -25, 0, 37.8,
-                     -9.6,
-                     -12.8,
-                     -9.6, 0, 0, -12.8, 9.6, 25.6, -9.6, -7.2, 0, -33.33, 9.6,
-                     -7.2, 0, 47.73], R=[0, 0, 0, -280, 0, 0, 0, 0],
-                  DIAG=[None, 1, 2, 4, 7,
-                        8, 11,
-                        13, 20],
-                  IER=-1)
-    print(result)
+                  A=[None, math.pow(10, 14),
+                     math.pow(10, 14), 9.6,
+                     50, 0, -25,
+                     33.33,
+                     37.8, 0, -25,
+                     math.pow(10, 14), -9.6,
+                     25.6, 9.6, -12.8, 0, 0, -9.6, -12.8,
+                     47.73, 0, -7.2, 9.6, -33.33, 0, -7.2, -9.6],
+                  R=[None, 0, 0, 0, -280, 0, 0, 0, 0],
+                  DIAG=[None, 1, 2, 4, 7, 8, 11, 13, 20, len(A)],
+                  IER=1)
+    # wb = load_workbook('./123.xlsx')
+    #
+    # sheet = wb['Матрица жесткости']
+    # cell_range = sheet['S19':'Z26']
+    # A = list()
+    # for row in cell_range:
+    #     input = [r.value for r in row]
+    #     A.append(input)
+    # print(A)
+    # A[0][0] = math.pow(10,14)
+    # A[1][1] = math.pow(10,14)
+    # A[5][5] = math.pow(10,14)
+    # print(A)
+    # cell_range = sheet['M24':'M31']
+    # R = list()
+    # for row in cell_range:
+    #     input = [r.value for r in row]
+    #     R.append(input)
+    # print(R)
+    print('R = ' + str(result))
