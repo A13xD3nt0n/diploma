@@ -5,12 +5,6 @@ rods = list()
 loads = list()
 
 
-def getNode(number):
-    for node in nodes:
-        print(type(node.toList()))
-        if number == node.number:
-            return node.toList()
-
 
 class Node:
     def __init__(self, number, x, z, x_connection, z_connection):
@@ -43,6 +37,10 @@ class Node:
     def toList(self):
         return [self.x, self.z, self.x_connection, self.z_connection]
 
+    def getNode(self, number):
+        if number == self.number:
+            return self
+
     #
     # @x.setter
     # def x(self, value):
@@ -70,11 +68,9 @@ class Rod:
         self._mNumber = number
         self._mFirst_node = first_node
         self._mSecond_node = second_node
-        print(second_node)
-        self._mL = math.pow(self._mSecond_node.z - self._mFirst_node.z,
-                            2) + math.pow(self._mSecond_node.x -
-                                          self._mFirst_node.x, 2)
-        print('tyt3')
+        self._mL = math.pow((self._mSecond_node.z - self._mFirst_node.z),
+                            2) + math.pow((self._mSecond_node.x -
+                                          self._mFirst_node.x), 2)
         self._mSin = (self._mSecond_node.z - self._mFirst_node.z) / \
                      self._mL
         self._mCos = (self._mSecond_node.x - self._mFirst_node.x) / \
@@ -130,8 +126,9 @@ class Rod:
 
 
 class Load:
-    def __init__(self, number, x, z):
+    def __init__(self, number, node, x, z):
         self._mNumber = number
+        self._mNode = node
         self._mX = x
         self._mZ = z
 
@@ -146,6 +143,10 @@ class Load:
     @property
     def number(self):
         return self._mNumber
+
+    @property
+    def node(self):
+        return self._mNode
 
     # @x.setter
     # def x(self, value):

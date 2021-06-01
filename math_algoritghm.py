@@ -1,4 +1,11 @@
 import math
+import numpy
+
+
+def decise_numpy(A, R):
+    result = numpy.linalg.solve(A, R)
+    return result
+
 
 def gaus(N, A, R, DIAG, IER):
     # IER = -1 - BЫПOЛHЯETCЯ TOЛЬKO TPEУГOЛЬHOE PAЗЛOЖEHИE MATPИЦЫ A
@@ -11,7 +18,7 @@ def gaus(N, A, R, DIAG, IER):
             kn = DIAG[i]  # Берется первый номер диагонального элемента
             kl = kn + 1  # Индекс следующего матрицы элемента
             ku = DIAG[i + 1] - 1  # 3-1=2
-            kh = ku - kl  #2-2=0
+            kh = ku - kl  # 2-2=0
             print("KH = " + str(kh))
             if kh > 0:
                 k = i - kh
@@ -85,12 +92,13 @@ def gaus(N, A, R, DIAG, IER):
 
 if __name__ == '__main__':
     result = gaus(N=8,
-             A=[None, 37.8, 9.6, 7.2, -25, 0, 50, 33.33, -25, 0, 37.8, -9.6,
-                -12.8,
-                -9.6, 0, 0, -12.8, 9.6, 25.6, -9.6, -7.2, 0, -33.33, 9.6,
-                -7.2, 0, 47.73], R=[0, 0, 0, -280, 0, 0, 0, 0],
-             DIAG=[None, 1, 2, 4, 7,
-                   8, 11,
-                   13, 20],
-             IER=-1)
+                  A=[None, 37.8, 9.6, 7.2, -25, 0, 50, 33.33, -25, 0, 37.8,
+                     -9.6,
+                     -12.8,
+                     -9.6, 0, 0, -12.8, 9.6, 25.6, -9.6, -7.2, 0, -33.33, 9.6,
+                     -7.2, 0, 47.73], R=[0, 0, 0, -280, 0, 0, 0, 0],
+                  DIAG=[None, 1, 2, 4, 7,
+                        8, 11,
+                        13, 20],
+                  IER=-1)
     print(result)
