@@ -145,7 +145,7 @@ class Load:
         return self._mNode
 
     def toList(self):
-        return []
+        return [self.number, self.x, self.z]
 
     # @x.setter
     # def x(self, value):

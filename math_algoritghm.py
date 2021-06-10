@@ -12,110 +12,117 @@ def gaus(N, A, R, DIAG, IER):
     # IER = -1 - BЫПOЛHЯETCЯ TOЛЬKO TPEУГOЛЬHOE PAЗЛOЖEHИE MATPИЦЫ A
     # IER = 0 - OБPATHЫЙ XOД ПO ПPABЫM ЧACTЯM
     # IER = 1 - ПPЯMOЙ И OБPATHЫЙ XOД
-    igaus = 0
+    IGAUS = 0
     if IER != 0:
-        for i in range(1, N + 1):
-            print('I = ' + str(i))
-            kn = DIAG[i]  # Берется первый номер диагонального элемента
-            kl = kn + 1  # Индекс следующего матрицы элемента
-            ku = DIAG[i + 1] - 1  # 3-1=2
-            kh = ku - kl  # 2-2=0
-            print("KH = " + str(kh))
-            if kh > 0:
-                k = i - kh
-                ic = 0
-                klt = ku
+        for I in range(1, N + 1):
+            print('I = ' + str(I))
+            KN = DIAG[I]  # Берется первый номер диагонального элемента
+            KL = KN + 1  # Индекс следующего диагонального элемента
+            KU = DIAG[I + 1] - 1  # индекс элемента перед диагональным
+            KH = KU - KL  # если больше 0 нет элементов между диагональными
+            print("KH = " + str(KH))
+            if KH > 0:
+                K = I - KH # Индекс элемента
+                IC = 0
+                KLT = KU
                 print('CYCLE element')
-                for j in range(1, kh + 1):
-                    ic = ic + 1
-                    klt = klt - 1
-                    ki = DIAG[k]
-                    no = DIAG[k + 1] - ki - 1
-                    if no > 0:
-                        k1 = min(ic, no)
-                        s = 0
-                        ks = k
-                        for l in range(1, k1 + 1):
-                            ks = ks - 1
+                for J in range(1, KH + 1):
+                    IC = IC + 1
+                    KLT = KLT - 1
+                    KI = DIAG[K]
+                    NO = DIAG[K + 1] - KI - 1
+                    if NO > 0:
+                        K1 = min(IC, NO)
+                        S = 0
+                        KS = K
+                        for L in range(1, K1 + 1):
+                            KS = KS - 1
                             print(
-                                'L=' + str(l) + ' KS=' + str(ks) + ' ki=' + str(
-                                    ki) +
-                                ' klt=' + str(klt))
-                            s = s + A[ki + l] * A[klt + l]
-                        A[klt] = A[klt] - s
-                        k = k + 1
-            kk = i
-            s = 0
+                                'L=' + str(L) + ' KS=' + str(KS) + ' KI=' + str(
+                                    KI) +
+                                ' KLT=' + str(KLT))
+                            S = S + A[KI + L] * A[KLT + L]
+                        A[KLT] = A[KLT] - S
+                        print('S='+str(S))
+                        K = K + 1
+            KK = I
+            S = 0
             print('cycle diag')
-            print('kl = ' + str(kl) + ' ku = ' + str(ku))
-            for kk1 in range(kl, ku + 1):
-                kk = kk - 1
-                kki = DIAG[kk]
-                if A[kki] == 0:
+            print('KL = ' + str(KL) + ' KU = ' + str(KU))
+            for KK1 in range(KL, KU + 1):
+                KK = KK - 1
+                KKI = DIAG[KK]
+                if A[KKI] == 0:
                     break
-                c = A[kk1] / A[kki]
-                s = s + c * A[kk1]
-                A[kk1] = c
-            A[kn] = A[kn] - s
+                C = A[KK1] / A[KKI]
+                S = S + C * A[KK1]
+                print('KK1='+str(KK1)+' KKI='+str(KKI)+' kk='+str(KK))
+                A[KK1] = C
+            A[KN] = A[KN] - S
+            print('A['+str(KN)+']='+str(A[KN])+' S='+str(S))
             # TODO -10 degree
-            if A[kn] < math.pow(1, -10):
-                igaus = igaus + 1
+            if A[KN] < math.pow(1, -10):
+                IGAUS = IGAUS + 1
                 return
-    if IER < 0:
-        return
     print('ПРЯМОЙ И ОБРАТНЫЙ ХОД')
     if IER >= 0:
-        for i in range(1, N + 1):
-            kl = DIAG[i] + 1
-            ku = DIAG[i + 1] - 1
-            if ku < kl:
-                k = i
-                s = 0
-                for k1 in range(kl, ku + 1):
-                    k = k - 1
-                    s = s + A[k1] * R[k]
-                R[i] = R[i] - s
-        for i in range(1, N + 1):
-            k = DIAG[i]
-            R[i] = R[i] / A[k]
-        n1 = N
-        for l in range(1, N + 1):
-            if l >= N:
-                kl = DIAG[i] + 1
-                ku = DIAG[i + 1] - 1
-                if ku < kl:
-                    k = n1
-                    for k1 in range(kl, ku + 1):
-                        k = k - 1
-                        R[k] = R[k] - A[k1] * R[n1]
-            n1 = n1 - 1
+        for I in range(1, N + 1):
+            print('Ir='+str(I))
+            KL = DIAG[I] + 1
+            KU = DIAG[I + 1] - 1
+            print('KU='+str(KU)+' KL='+str(KL))
+            if KU > KL:
+                K = I
+                print('TYT')
+                S = 0
+                for K1 in range(KL, KU + 1):
+                    K = K - 1
+                    S = S + A[K1] * R[K]
+                    print('K1='+str(K1)+' K='+str(K)+' vektor R')
+                R[I] = R[I] - S
+                print('R['+str(I)+']='+str(R[I]))
+        for I in range(1, N + 1):
+            print('Iobr='+str(I))
+            K = DIAG[I]
+            R[I] = R[I] / A[K]
+        N1 = N
+        for L in range(1, N + 1):
+            if L < N:
+                KL = DIAG[N1] + 1
+                KU = DIAG[N1 + 1] - 1
+                if KU > KL:
+                    K = N1
+                    for K1 in range(KL, KU + 1):
+                        K = K - 1
+                        R[K] = R[K] - A[K1] * R[N1]
+                        print('R['+str(K)+']='+str(R[K]))
+                N1 = N1 - 1
     return R
 
 
 if __name__ == '__main__':
-    N = 8,
+    N = 8
     A = [None, math.pow(10, 14),
          math.pow(10, 14), 9.6,
          50, 0, -25,
-         33.33,
+         33.333333, 0,
          37.8, 0, -25,
          math.pow(10, 14), -9.6,
          25.6, 9.6, -12.8, 0, 0, -9.6, -12.8,
-         47.73, 0, -7.2, 9.6, -33.33, 0, -7.2, -9.6],
-    R = [None, 0, 0, 0, -280, 0, 0, 0, 0],
-    DIAG = [None, 1, 2, 4, 7, 8, 11, 13, 20, len(A)],
-    IER = 1
-    result = gaus(N=8,
-                  A=[None, math.pow(10, 14),
-                     math.pow(10, 14), 9.6,
-                     50, 0, -25,
-                     33.33,
-                     37.8, 0, -25,
-                     math.pow(10, 14), -9.6,
-                     25.6, 9.6, -12.8, 0, 0, -9.6, -12.8,
-                     47.73, 0, -7.2, 9.6, -33.33, 0, -7.2, -9.6],
-                  R=[None, 0, 0, 0, -280, 0, 0, 0, 0],
-                  DIAG=[None, 1, 2, 4, 7, 8, 11, 13, 20, len(A)],
+         47.733333, 0, -7.2, 9.6, -33.333333, 0, -7.2, -9.6]
+    R = [None, 0, 0, 0, -280, 0, 0, 0, 0]
+    DIAG = [None, 1, 2, 4, 7, 9, 12, 14, 21, A.__len__()]
+    # N = 8
+    # A = [None, math.pow(10,18), 320, 96,   math.pow(10,18) ,-96,-38.4,
+    #      2320, 654,  160,  96.,math.pow(10,18), -750, -375,  6000, 750, 1000,
+    #      750,    750, -1500, -750,4000, -1500, 2000, 1500 ]
+    # R = [None, 222, 25,   444,  50,  666,    40,   64,  38]
+    # DIAG = [None, 1,2,4,7,11,14,18,21,25]
+    print('A=' + str(A) + ' R=' + str(R) + ' DIAG=' + str(DIAG))
+    result = gaus(N=N,
+                  A=A,
+                  R=R,
+                  DIAG=DIAG,
                   IER=1)
     # wb = load_workbook('./123.xlsx')
     #
@@ -125,15 +132,13 @@ if __name__ == '__main__':
     # for row in cell_range:
     #     input = [r.value for r in row]
     #     A.append(input)
-    # print(A)
     # A[0][0] = math.pow(10,14)
     # A[1][1] = math.pow(10,14)
     # A[5][5] = math.pow(10,14)
-    # print(A)
     # cell_range = sheet['M24':'M31']
     # R = list()
     # for row in cell_range:
     #     input = [r.value for r in row]
     #     R.append(input)
-    # print(R)
+    # print(decise_numpy(A,R))
     print('R = ' + str(result))

@@ -43,6 +43,7 @@ class NodeMenu(QWidget):
 
         self.delete_button = QPushButton('Удалить')
         self.delete_button.clicked.connect(self.delete_node)
+        self.delete_button.setEnabled(False)
 
         self.nodes_table = QTableWidget()
         self.nodes_table.setColumnCount(4)
@@ -64,8 +65,6 @@ class NodeMenu(QWidget):
         self.update_table()
 
     def changeEvent(self, *args, **kwargs):
-        if len(nodes) == 0:
-            self.delete_button.setEnabled(False)
         if self.node_index != len(nodes):
             self.update_table()
 
@@ -77,6 +76,10 @@ class NodeMenu(QWidget):
                 str(nodes[i].number)))
             for j in range(len(node)):
                 self.nodes_table.setItem(i, j, QTableWidgetItem(str(node[j])))
+        if len(nodes) == 0:
+            self.delete_button.setEnabled(False)
+        else:
+            self.delete_button.setEnabled(True)
         self.nodes_table.resizeColumnsToContents()
 
 
@@ -88,9 +91,9 @@ class AddNodeForm(QWidget):
         self.add_button.clicked.connect(self.add_node)
         self.x_label = QLabel('X:')
         self.z_label = QLabel('Z:')
-        self.x_textfield = QLineEdit()
+        self.x_textfield = QLineEdit('0')
         self.x_textfield.setValidator(QIntValidator())
-        self.z_textfield = QLineEdit()
+        self.z_textfield = QLineEdit('0')
         self.z_textfield.setValidator(QIntValidator())
         self.connection_label = QLabel('Связи:')
         self.x_checkbox = QCheckBox('X')
@@ -123,13 +126,18 @@ class RodMenu(QWidget):
         super().__init__()
         self.rod_index = len(rods)
         self.add_rod_form = AddRodForm(menu=self)
+
         self.add_button = QPushButton("Добавить")
         self.add_button.clicked.connect(self.add_rod)
+
         self.delete_button = QPushButton('Удалить')
         self.delete_button.clicked.connect(self.delete_rod)
+        self.delete_button.setEnabled(False)
+
         self.rods_table = QTableWidget()
         self.rods_table.setColumnCount(2)
         self.rods_table.setHorizontalHeaderLabels(['Узел 1', 'Узел 2'])
+
         box = QVBoxLayout()
         box.addWidget(self.add_button)
         box.addWidget(self.delete_button)
@@ -143,9 +151,13 @@ class RodMenu(QWidget):
         rods.pop(self.rods_table.currentRow())
         self.update_table()
 
+    def showEvent(self, *args, **kwargs) -> None:
+        if nodes.__len__() == 0:
+            self.add_button.setEnabled(False)
+        else:
+            self.add_button.setEnabled(True)
+
     def changeEvent(self, *args, **kwargs):
-        if len(rods) == 0:
-            self.delete_button.setEnabled(False)
         if self.rod_index != len(rods):
             self.update_table()
 
@@ -157,6 +169,10 @@ class RodMenu(QWidget):
                 str(rods[i].number)))
             for j in range(len(rod)):
                 self.rods_table.setItem(i, j, QTableWidgetItem(str(rod[j])))
+        if len(rods) == 0:
+            self.delete_button.setEnabled(False)
+        else:
+            self.delete_button.setEnabled(True)
         self.rods_table.resizeColumnsToContents()
 
 
@@ -185,13 +201,15 @@ class AddRodForm(QWidget):
         number = rods.__len__() + 1
         first_node = self.first_node_cb.currentIndex()
         second_node = self.second_node_cb.currentIndex()
-        print(first_node)
-        print(second_node)
 
         rods.append(Rod(number, nodes[first_node], nodes[second_node]))
         self.menu.update_table()
 
     def changeEvent(self, *args, **kwargs):
+        if nodes.__len__() == 0:
+            self.add_button.setEnabled(False)
+        else:
+            self.add_button.setEnabled(True)
         if self.node_index != nodes.__len__():
             for node in nodes:
                 self.first_node_cb.addItem(str(node.number))
@@ -209,10 +227,11 @@ class LoadsMenu(QWidget):
 
         self.delete_button = QPushButton('Удалить')
         self.delete_button.clicked.connect(self.delete_load)
+        self.delete_button.setEnabled(False)
 
         self.loads_table = QTableWidget()
-        self.loads_table.setColumnCount(2)
-        self.loads_table.setHorizontalHeaderLabels(['X', 'Z'])
+        self.loads_table.setColumnCount(3)
+        self.loads_table.setHorizontalHeaderLabels(['Узел','X', 'Z'])
         self.add_load_form = AddLoadForm(menu=self)
 
         box = QVBoxLayout()
@@ -228,9 +247,13 @@ class LoadsMenu(QWidget):
         loads.pop(self.loads_table.currentRow())
         self.update_table()
 
+    def showEvent(self, *args, **kwargs) -> None:
+        if nodes.__len__() == 0:
+            self.add_button.setEnabled(False)
+        else:
+            self.add_button.setEnabled(True)
+
     def changeEvent(self, *args, **kwargs):
-        if len(loads) == 0:
-            self.delete_button.setEnabled(False)
         if self.load_index != len(loads):
             self.update_table()
 
@@ -242,6 +265,10 @@ class LoadsMenu(QWidget):
                 str(loads[i].number)))
             for j in range(len(load)):
                 self.loads_table.setItem(i, j, QTableWidgetItem(str(load[j])))
+        if len(loads) == 0:
+            self.delete_button.setEnabled(False)
+        else:
+            self.delete_button.setEnabled(True)
         self.loads_table.resizeColumnsToContents()
 
 
@@ -251,17 +278,20 @@ class AddLoadForm(QWidget):
         self.menu = menu
         self.add_button = QPushButton('OK')
         self.add_button.clicked.connect(self.add_load)
+        self.node_label = QLabel('Узел:')
         self.x_label = QLabel('X:')
         self.z_label = QLabel('Z:')
-        self.x_textfield = QLineEdit()
+        self.x_textfield = QLineEdit('0')
         self.x_textfield.setValidator(QIntValidator())
-        self.z_textfield = QLineEdit()
+        self.z_textfield = QLineEdit('0')
         self.z_textfield.setValidator(QIntValidator())
         self.node_index = nodes.__len__()
 
         self.node_cb = QComboBox()
 
         box = QVBoxLayout()
+        box.addWidget(self.node_label)
+        box.addWidget(self.node_cb)
         box.addWidget(self.x_label)
         box.addWidget(self.x_textfield)
         box.addWidget(self.z_label)
@@ -272,15 +302,15 @@ class AddLoadForm(QWidget):
     def add_load(self):
         number = loads.__len__() + 1
         node = self.node_cb.currentIndex()
-        x = self.x_textfield.text()
-        z = self.z_textfield.text()
+        x = int(self.x_textfield.text())
+        z = int(self.z_textfield.text())
         loads.append(Load(number, nodes[node], x, z))
         self.menu.update_table()
 
     def changeEvent(self, *args, **kwargs):
         if self.node_index != nodes.__len__():
             for node in nodes:
-                self.node_cb.addItem(node.number)
+                self.node_cb.addItem(str(node.number))
 
 
 class ResultWindow(QWidget):
