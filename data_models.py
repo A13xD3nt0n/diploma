@@ -1,4 +1,5 @@
 import math
+import math_algoritghm
 
 nodes = list()
 rods = list()
@@ -7,12 +8,14 @@ loads = list()
 
 
 class Node:
-    def __init__(self, number, x, z, x_connection, z_connection):
+    def __init__(self, number, x, y, x_connection, y_connection):
         self._mNumber = number
         self._mX = x
-        self._mZ = z
+        self._mY = y
         self._mX_connection = x_connection
-        self._mZ_connection = z_connection
+        self._mY_connection = y_connection
+        self._mX_load = 0
+        self._mY_load = 0
 
     @property
     def x(self):
@@ -23,19 +26,35 @@ class Node:
         return self._mNumber
 
     @property
-    def z(self):
-        return self._mZ
+    def y(self):
+        return self._mY
 
     @property
     def x_connection(self):
         return self._mX_connection
 
     @property
-    def z_connection(self):
-        return self._mZ_connection
+    def y_connection(self):
+        return self._mY_connection
+
+    @property
+    def x_load(self):
+        return self._mX_load
+
+    @property
+    def y_load(self):
+        return self._mY_load
+
+    @x_load.setter
+    def x_load(self, value):
+        self._mX_load = value
+
+    @y_load.setter
+    def y_load(self, value):
+        self._mY_load = value
 
     def toList(self):
-        return [self.x, self.z, self.x_connection, self.z_connection]
+        return [self.x, self.y, self.x_connection, self.y_connection]
 
     #
     # @x.setter
@@ -64,13 +83,19 @@ class Rod:
         self._mNumber = number
         self._mFirst_node = first_node
         self._mSecond_node = second_node
-        self._mL = math.pow((self._mSecond_node.z - self._mFirst_node.z),
+        self._mL = math.sqrt(math.pow((self._mSecond_node.y - self._mFirst_node.y),
                             2) + math.pow((self._mSecond_node.x -
-                                          self._mFirst_node.x), 2)
-        self._mSin = (self._mSecond_node.z - self._mFirst_node.z) / \
+                                          self._mFirst_node.x), 2))
+        self._mSin = (self._mSecond_node.y - self._mFirst_node.y) / \
                      self._mL
         self._mCos = (self._mSecond_node.x - self._mFirst_node.x) / \
                      self._mL
+        C2 = self.cos_squared()
+        S2 = self.sin_squared()
+        CS = self.getSinCos()
+        self._mSeparate_matrix = [[C2, CS, -C2, -CS], [CS, S2, -CS, -S2],
+                                  [-C2, -CS, C2, CS], [-CS, -S2, CS, S2]]
+
 
     @property
     def first_node(self):
@@ -92,8 +117,26 @@ class Rod:
     def number(self):
         return self._mNumber
 
+    @property
+    def l(self):
+        return self._mL
+
+    @property
+    def separate_matrix(self):
+        return self._mSeparate_matrix
+
     def toList(self):
         return [self.first_node.number, self.second_node.number]
+
+    def toShow(self):
+        return [self.l, self.cos, self.sin, self.cos_squared(),
+                self.sin_squared(), self.getSinCos()]
+
+    @property
+    def name(self):
+        return str(self._mNumber)+'й элемент ['+str(
+            self._mFirst_node.number)+':'+str(self._mSecond_node.number)+']'
+
 
     # @first_node.setter
     # def x(self, value):
@@ -156,10 +199,22 @@ class Load:
     #     self._mZ = value
 
 
-class MathClass():
-    def __init__(self, diag, matrix):
-        self._mDiag = diag
-        self._mMatrix = matrix
+class MathClass:
+    def __init__(self, nodes, rods, loads):
+        self._mDiag = list()
+        self._mMatrix = list()
+        self._mCompactMatrix = list()
+        self._mMotion = list()
+        self._mPillarReaction = list()
+        self._mEfforts = list()
+        self._mLoad = list()
+        states = nodes.__len__() * 2
+        for i in range(states):
+            zero_list = [0] * states
+            self._mMatrix.append(zero_list)
+
+        self._mMotion = math_algoritghm.gaus(states, self._mCompactMatrix, )
+
 
     @property
     def diag(self):
@@ -168,3 +223,23 @@ class MathClass():
     @property
     def matrix(self):
         return self._mMatrix
+
+    @property
+    def compact_matrix(self):
+        return self._mCompactMatrix
+
+    @property
+    def motions(self):
+        return self._mMotion
+
+    @property
+    def pillar_reactions(self):
+        return self._mPillarReaction
+
+    @property
+    def inner_efforts(self):
+        return self._mEfforts
+
+    @property
+    def loads(self):
+        return [None] + self._mLoad

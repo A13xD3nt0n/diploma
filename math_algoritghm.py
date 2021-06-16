@@ -101,7 +101,7 @@ def gaus(N, A, R, DIAG, IER):
 
 
 if __name__ == '__main__':
-    N = 8
+    N = 5
     A = [None, math.pow(10, 14),
          math.pow(10, 14), 9.6,
          50, 0, -25,
@@ -112,6 +112,9 @@ if __name__ == '__main__':
          47.733333, 0, -7.2, 9.6, -33.333333, 0, -7.2, -9.6]
     R = [None, 0, 0, 0, -280, 0, 0, 0, 0]
     DIAG = [None, 1, 2, 4, 7, 9, 12, 14, 21, A.__len__()]
+    # R = [None, 0, 1, 0, 0, 0]
+    # A = [None, 2, 3, -2, 5, -2, 10, -3, 10, 4, 0, 0, -1]
+    # DIAG = [None, 1, 2, 4, 6, 8, A.__len__()]
     # N = 8
     # A = [None, math.pow(10,18), 320, 96,   math.pow(10,18) ,-96,-38.4,
     #      2320, 654,  160,  96.,math.pow(10,18), -750, -375,  6000, 750, 1000,
@@ -140,5 +143,11 @@ if __name__ == '__main__':
     # for row in cell_range:
     #     input = [r.value for r in row]
     #     R.append(input)
-    # print(decise_numpy(A,R))
+    # print('Вектор Z1: ' +str(decise_numpy(A,R)))
+    # cell_range = sheet['O24':'O31']
+    # R = list()
+    # for row in cell_range:
+    #     input = [r.value for r in row]
+    #     R.append(input)
+    # print('Вектор Z2: ' + str(decise_numpy(A, R)))
     print('R = ' + str(result))

@@ -1,5 +1,5 @@
 import sys
-from data_models import Node, Rod, Load, nodes, rods, loads
+from data_models import Node, Rod, Load, nodes, rods, loads, MathClass
 from PyQt5.QtWidgets import QWidget, QApplication, QCheckBox, QVBoxLayout, \
     QPushButton, QTableWidget, QLabel, QLineEdit, QTableWidgetItem, \
     QTabWidget, QComboBox
@@ -22,6 +22,7 @@ class MainMenu(QWidget):
 
         self.calculate_button = QPushButton('Расчет')
         self.calculate_button.clicked.connect(self.show_result)
+        self.result_window = ResultWindow()
 
         self.main_layout = QVBoxLayout()
         self.main_layout.addWidget(self.tab_bar)
@@ -29,7 +30,7 @@ class MainMenu(QWidget):
         self.setLayout(self.main_layout)
 
     def show_result(self):
-        pass
+        self.result_window.show()
 
 
 class NodeMenu(QWidget):
@@ -47,8 +48,8 @@ class NodeMenu(QWidget):
 
         self.nodes_table = QTableWidget()
         self.nodes_table.setColumnCount(4)
-        self.nodes_table.setHorizontalHeaderLabels(['X', 'Z', 'Связь по X',
-                                                    'Связь по Z'])
+        self.nodes_table.setHorizontalHeaderLabels(['X', 'Y', 'Связь по X',
+                                                    'Связь по Y'])
         self.add_node_form = AddNodeForm(menu=self)
 
         box = QVBoxLayout()
@@ -90,33 +91,36 @@ class AddNodeForm(QWidget):
         self.add_button = QPushButton('OK')
         self.add_button.clicked.connect(self.add_node)
         self.x_label = QLabel('X:')
-        self.z_label = QLabel('Z:')
+        self.y_label = QLabel('Y:')
         self.x_textfield = QLineEdit('0')
         self.x_textfield.setValidator(QIntValidator())
-        self.z_textfield = QLineEdit('0')
-        self.z_textfield.setValidator(QIntValidator())
+        self.y_textfield = QLineEdit('0')
+        self.y_textfield.setValidator(QIntValidator())
         self.connection_label = QLabel('Связи:')
         self.x_checkbox = QCheckBox('X')
-        self.z_checkbox = QCheckBox('Z')
+        self.y_checkbox = QCheckBox('Y')
 
         box = QVBoxLayout()
         box.addWidget(self.x_label)
         box.addWidget(self.x_textfield)
-        box.addWidget(self.z_label)
-        box.addWidget(self.z_textfield)
+        box.addWidget(self.y_label)
+        box.addWidget(self.y_textfield)
         box.addWidget(self.connection_label)
         box.addWidget(self.x_checkbox)
-        box.addWidget(self.z_checkbox)
+        box.addWidget(self.y_checkbox)
         box.addWidget(self.add_button)
         self.setLayout(box)
 
     def add_node(self):
         number = nodes.__len__() + 1
         x = int(self.x_textfield.text())
-        z = int(self.z_textfield.text())
+        y = int(self.y_textfield.text())
         x_connection = self.x_checkbox.isChecked()
-        z_connection = self.z_checkbox.isChecked()
-        nodes.append(Node(number, x, z, x_connection, z_connection))
+        y_connection = self.y_checkbox.isChecked()
+        for node in nodes:
+            if (node.y == y) and (node.x == x):
+                return
+        nodes.append(Node(number, x, y, x_connection, y_connection))
         self.menu.update_table()
 
 
@@ -231,7 +235,7 @@ class LoadsMenu(QWidget):
 
         self.loads_table = QTableWidget()
         self.loads_table.setColumnCount(3)
-        self.loads_table.setHorizontalHeaderLabels(['Узел','X', 'Z'])
+        self.loads_table.setHorizontalHeaderLabels(['Узел', 'X', 'Y'])
         self.add_load_form = AddLoadForm(menu=self)
 
         box = QVBoxLayout()
@@ -280,11 +284,11 @@ class AddLoadForm(QWidget):
         self.add_button.clicked.connect(self.add_load)
         self.node_label = QLabel('Узел:')
         self.x_label = QLabel('X:')
-        self.z_label = QLabel('Z:')
+        self.y_label = QLabel('Y:')
         self.x_textfield = QLineEdit('0')
         self.x_textfield.setValidator(QIntValidator())
-        self.z_textfield = QLineEdit('0')
-        self.z_textfield.setValidator(QIntValidator())
+        self.y_textfield = QLineEdit('0')
+        self.y_textfield.setValidator(QIntValidator())
         self.node_index = nodes.__len__()
 
         self.node_cb = QComboBox()
@@ -294,8 +298,8 @@ class AddLoadForm(QWidget):
         box.addWidget(self.node_cb)
         box.addWidget(self.x_label)
         box.addWidget(self.x_textfield)
-        box.addWidget(self.z_label)
-        box.addWidget(self.z_textfield)
+        box.addWidget(self.y_label)
+        box.addWidget(self.y_textfield)
         box.addWidget(self.add_button)
         self.setLayout(box)
 
@@ -303,8 +307,8 @@ class AddLoadForm(QWidget):
         number = loads.__len__() + 1
         node = self.node_cb.currentIndex()
         x = int(self.x_textfield.text())
-        z = int(self.z_textfield.text())
-        loads.append(Load(number, nodes[node], x, z))
+        y = int(self.y_textfield.text())
+        loads.append(Load(number, nodes[node], x, y))
         self.menu.update_table()
 
     def changeEvent(self, *args, **kwargs):
@@ -316,18 +320,132 @@ class AddLoadForm(QWidget):
 class ResultWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.result_table = QTableWidget()
-        self.next_button = QPushButton('Далее')
+        self.next_button = QPushButton('')
         self.back_button = QPushButton('Назад')
 
+        self.setWindowTitle('Результаты расчета')
+        self.setMinimumSize(800, 600)
+
+        self.tab_bar = QTabWidget()
+        self.geometry_menu = GeometryMenu()
+        self.separate_matrix_menu = SeparateMatrixMenu()
+        self.full_matrix_menu = FullMatrixMenu()
+        self.result_menu = ResultMenu()
+        self.tab_bar.addTab(self.geometry_menu, 'Геометрические параметры')
+        self.tab_bar.addTab(self.separate_matrix_menu, 'Матрицы жесткости '
+                                                       'элементов')
+        self.tab_bar.addTab(self.full_matrix_menu, 'Общая матрица жесткости')
+        self.tab_bar.addTab(self.result_menu, 'Результаты расчетов')
+
         box = QVBoxLayout()
-        box.addWidget(self.result_table)
+        box.addWidget(self.tab_bar)
         box.addWidget(self.next_button)
         box.addWidget(self.back_button)
         self.setLayout(box)
 
     def set_data(self, data):
         pass
+
+
+class GeometryMenu(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.rod_index = rods.__len__()
+        self.data_table = QTableWidget()
+        self.data_table.setRowCount(6)
+        self.data_table.setColumnCount(1)
+        self.data_table.setVerticalHeaderLabels(['L', 'COS', 'SIN',
+                                                 'COS2',
+                                                 'SIN2', 'COS*SIN'])
+
+        box = QVBoxLayout()
+        box.addWidget(self.data_table)
+        self.setLayout(box)
+
+    def showEvent(self, *args, **kwargs):
+        if self.rod_index != len(rods):
+            self.update_data_table()
+
+    def update_data_table(self):
+        self.data_table.setColumnCount(rods.__len__())
+        for i in range(len(rods)):
+            rod = rods[i].toShow()
+            self.data_table.setHorizontalHeaderItem(i, QTableWidgetItem(
+                str(rods[i].number)))
+            for j in range(len(rod)):
+                self.data_table.setItem(j, i, QTableWidgetItem(str(rod[j])))
+        self.data_table.resizeColumnsToContents()
+
+
+class SeparateMatrixMenu(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.tab_bar = QTabWidget()
+
+        box = QVBoxLayout()
+        box.addWidget(self.tab_bar)
+        self.setLayout(box)
+
+    def showEvent(self, *args, **kwargs):
+        self.tab_bar.clear()
+        for rod in rods:
+            self.tab_bar.addTab(SeparateMatrixTable(rod.separate_matrix),
+                                rod.name)
+
+
+class SeparateMatrixTable(QTableWidget):
+    def __init__(self, data):
+        super().__init__()
+        self.verticalHeader().hide()
+        self.horizontalHeader().hide()
+        self.setColumnCount(4)
+        self.setRowCount(4)
+        for i in range(4):
+            for j in range(4):
+                self.setItem(i, j, QTableWidgetItem(str(data[i][j])))
+
+
+class FullMatrixMenu(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.data_table = QTableWidget()
+
+        box = QVBoxLayout()
+        box.addWidget(self.data_table)
+        self.setLayout(box)
+
+    def showEvent(self, *args, **kwargs):
+        self.data_table.clear()
+        matrix_states = nodes.__len__()*2
+        self.data_table.setColumnCount(matrix_states)
+        self.data_table.setRowCount(matrix_states)
+        data = [1,2]
+        for i in range(matrix_states):
+            for j in range(matrix_states):
+                self.data_table.setItem(i, j, QTableWidgetItem(str(data[i][j])))
+
+
+class ResultMenu(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.data_table = QTableWidget()
+
+        box = QVBoxLayout()
+        box.addWidget(self.data_table)
+        self.setLayout(box)
+
+    def update_data_table(self):
+        self.data_table.setColumnCount(2)
+        self.data_table.setHorizontalHeaderLabels(['R', 'N'])
+
+    # def get_pillar_reaction(self):
+    #     k = 0
+    #     for node in nodes():
+    #         if node.z_connection:
+    #             k += 1
+    #         if node.x_connection:
+    #             k += 1
+    #     return k
 
 
 if __name__ == '__main__':
