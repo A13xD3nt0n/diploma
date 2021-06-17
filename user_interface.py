@@ -1,10 +1,22 @@
 import sys
-from data_models import Node, Rod, Load, nodes, rods, loads, MathClass
+from data_models import Node, Rod, Load, nodes, rods, loads, MathClass, results
 from PyQt5.QtWidgets import QWidget, QApplication, QCheckBox, QVBoxLayout, \
     QPushButton, QTableWidget, QLabel, QLineEdit, QTableWidgetItem, \
     QTabWidget, QComboBox
 from PyQt5.Qt import QIntValidator
 
+def load_test():
+    nodes.append(Node(1,0,0, True, True))
+    nodes.append(Node(2,4,0,False,False))
+    nodes.append(Node(3, 8, 0, False, True))
+    nodes.append(Node(4, 4, 3, False, False))
+    rods.append(Rod(1, nodes[0], nodes[1], 100))
+    rods.append(Rod(2, nodes[1], nodes[2], 100))
+    rods.append(Rod(3, nodes[0], nodes[3], 100))
+    rods.append(Rod(4, nodes[2], nodes[3], 100))
+    rods.append(Rod(5, nodes[1], nodes[3], 100))
+    loads.append(Load(1, nodes[1], 0, -280))
+    loads.append(Load(2, nodes[3], 380, 0))
 
 class MainMenu(QWidget):
     def __init__(self):
@@ -57,6 +69,7 @@ class NodeMenu(QWidget):
         box.addWidget(self.delete_button)
         box.addWidget(self.nodes_table)
         self.setLayout(box)
+        self.update_table()
 
     def add_node(self):
         self.add_node_form.show()
@@ -139,14 +152,15 @@ class RodMenu(QWidget):
         self.delete_button.setEnabled(False)
 
         self.rods_table = QTableWidget()
-        self.rods_table.setColumnCount(2)
-        self.rods_table.setHorizontalHeaderLabels(['Узел 1', 'Узел 2'])
+        self.rods_table.setColumnCount(3)
+        self.rods_table.setHorizontalHeaderLabels(['Узел 1', 'Узел 2', 'EI'])
 
         box = QVBoxLayout()
         box.addWidget(self.add_button)
         box.addWidget(self.delete_button)
         box.addWidget(self.rods_table)
         self.setLayout(box)
+        self.update_table()
 
     def add_rod(self):
         self.add_rod_form.show()
@@ -192,12 +206,16 @@ class AddRodForm(QWidget):
         self.node_index = nodes.__len__()
         self.first_node_cb = QComboBox()
         self.second_node_cb = QComboBox()
-
+        self.EI_label = QLabel('Жесткостные хар-ки(EI):')
+        self.EI_text_field = QLineEdit()
+        self.EI_text_field.setValidator(QIntValidator())
         box = QVBoxLayout()
         box.addWidget(self.first_node_label)
         box.addWidget(self.first_node_cb)
         box.addWidget(self.second_node_label)
         box.addWidget(self.second_node_cb)
+        box.addWidget(self.EI_label)
+        box.addWidget(self.EI_text_field)
         box.addWidget(self.add_button)
         self.setLayout(box)
 
@@ -205,8 +223,9 @@ class AddRodForm(QWidget):
         number = rods.__len__() + 1
         first_node = self.first_node_cb.currentIndex()
         second_node = self.second_node_cb.currentIndex()
+        EI = int(self.EI_text_field.text())
 
-        rods.append(Rod(number, nodes[first_node], nodes[second_node]))
+        rods.append(Rod(number, nodes[first_node], nodes[second_node], EI))
         self.menu.update_table()
 
     def changeEvent(self, *args, **kwargs):
@@ -243,6 +262,7 @@ class LoadsMenu(QWidget):
         box.addWidget(self.delete_button)
         box.addWidget(self.loads_table)
         self.setLayout(box)
+        self.update_table()
 
     def add_load(self):
         self.add_load_form.show()
@@ -343,9 +363,6 @@ class ResultWindow(QWidget):
         box.addWidget(self.back_button)
         self.setLayout(box)
 
-    def set_data(self, data):
-        pass
-
 
 class GeometryMenu(QWidget):
     def __init__(self):
@@ -361,6 +378,7 @@ class GeometryMenu(QWidget):
         box = QVBoxLayout()
         box.addWidget(self.data_table)
         self.setLayout(box)
+        self.update_data_table()
 
     def showEvent(self, *args, **kwargs):
         if self.rod_index != len(rods):
@@ -409,6 +427,8 @@ class FullMatrixMenu(QWidget):
     def __init__(self):
         super().__init__()
         self.data_table = QTableWidget()
+        self.data_table.verticalHeader().hide()
+        self.data_table.horizontalHeader().hide()
 
         box = QVBoxLayout()
         box.addWidget(self.data_table)
@@ -419,7 +439,8 @@ class FullMatrixMenu(QWidget):
         matrix_states = nodes.__len__()*2
         self.data_table.setColumnCount(matrix_states)
         self.data_table.setRowCount(matrix_states)
-        data = [1,2]
+        self.maths = MathClass(nodes, rods, loads)
+        data = self.maths.matrix
         for i in range(matrix_states):
             for j in range(matrix_states):
                 self.data_table.setItem(i, j, QTableWidgetItem(str(data[i][j])))
@@ -450,6 +471,7 @@ class ResultMenu(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    load_test()
     starter_menu = MainMenu()
     starter_menu.show()
     sys.exit(app.exec_())

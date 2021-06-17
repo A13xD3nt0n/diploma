@@ -13,6 +13,11 @@ def gaus(N, A, R, DIAG, IER):
     # IER = 0 - OБPATHЫЙ XOД ПO ПPABЫM ЧACTЯM
     # IER = 1 - ПPЯMOЙ И OБPATHЫЙ XOД
     IGAUS = 0
+    print('N='+str(N))
+    print('A='+str(A))
+    print('R='+str(R))
+    print('DIAG='+str(DIAG))
+    print('IER='+str(IER))
     if IER != 0:
         for I in range(1, N + 1):
             print('I = ' + str(I))
@@ -61,7 +66,7 @@ def gaus(N, A, R, DIAG, IER):
             A[KN] = A[KN] - S
             print('A['+str(KN)+']='+str(A[KN])+' S='+str(S))
             # TODO -10 degree
-            if A[KN] < math.pow(1, -10):
+            if A[KN] < math.pow(10, -10):
                 IGAUS = IGAUS + 1
                 return
     print('ПРЯМОЙ И ОБРАТНЫЙ ХОД')
@@ -71,9 +76,8 @@ def gaus(N, A, R, DIAG, IER):
             KL = DIAG[I] + 1
             KU = DIAG[I + 1] - 1
             print('KU='+str(KU)+' KL='+str(KL))
-            if KU > KL:
+            if KU >= KL:
                 K = I
-                print('TYT')
                 S = 0
                 for K1 in range(KL, KU + 1):
                     K = K - 1
@@ -90,7 +94,7 @@ def gaus(N, A, R, DIAG, IER):
             if L < N:
                 KL = DIAG[N1] + 1
                 KU = DIAG[N1 + 1] - 1
-                if KU > KL:
+                if KU >= KL:
                     K = N1
                     for K1 in range(KL, KU + 1):
                         K = K - 1
@@ -101,7 +105,7 @@ def gaus(N, A, R, DIAG, IER):
 
 
 if __name__ == '__main__':
-    N = 5
+    N = 8
     A = [None, math.pow(10, 14),
          math.pow(10, 14), 9.6,
          50, 0, -25,
@@ -112,9 +116,19 @@ if __name__ == '__main__':
          47.733333, 0, -7.2, 9.6, -33.333333, 0, -7.2, -9.6]
     R = [None, 0, 0, 0, -280, 0, 0, 0, 0]
     DIAG = [None, 1, 2, 4, 7, 9, 12, 14, 21, A.__len__()]
+    # N = 8
+    # A = [None, 100000000000000.0, 100000000000000.0, 9.6, 50.0, 0.0, -25.0,
+    #      33.333333333333336, 0, 100000000000000.0, 0.0, -25.0, 7.2, -9.6,
+    #      25.600000000000005, 9.6, -12.800000000000002, 0.0, 0.0, -9.6,
+    #      -12.800000000000002, 47.733333333333334, 0.0, -7.2, 9.6,
+    #      -33.333333333333336, 0.0, -7.2, -9.6]
+    # R = [None, 0, 0, 0, -280, 0, 0, 0, 0]
+    # DIAG = [None, 1, 2, 4, 7, 9, 12, 14, 21, 29]
+    # IER = 1
     # R = [None, 0, 1, 0, 0, 0]
     # A = [None, 2, 3, -2, 5, -2, 10, -3, 10, 4, 0, 0, -1]
     # DIAG = [None, 1, 2, 4, 6, 8, A.__len__()]
+    # N = 5
     # N = 8
     # A = [None, math.pow(10,18), 320, 96,   math.pow(10,18) ,-96,-38.4,
     #      2320, 654,  160,  96.,math.pow(10,18), -750, -375,  6000, 750, 1000,
