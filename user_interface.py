@@ -1,13 +1,14 @@
 import sys
-from data_models import Node, Rod, Load, nodes, rods, loads, MathClass, results
+from data_models import Node, Rod, Load, nodes, rods, loads, MathClass
 from PyQt5.QtWidgets import QWidget, QApplication, QCheckBox, QVBoxLayout, \
     QPushButton, QTableWidget, QLabel, QLineEdit, QTableWidgetItem, \
     QTabWidget, QComboBox
 from PyQt5.Qt import QIntValidator
 
+
 def load_test():
-    nodes.append(Node(1,0,0, True, True))
-    nodes.append(Node(2,4,0,False,False))
+    nodes.append(Node(1, 0, 0, True, True))
+    nodes.append(Node(2, 4, 0, False, False))
     nodes.append(Node(3, 8, 0, False, True))
     nodes.append(Node(4, 4, 3, False, False))
     rods.append(Rod(1, nodes[0], nodes[1], 100))
@@ -17,6 +18,7 @@ def load_test():
     rods.append(Rod(5, nodes[1], nodes[3], 100))
     loads.append(Load(1, nodes[1], 0, -280))
     loads.append(Load(2, nodes[3], 380, 0))
+
 
 class MainMenu(QWidget):
     def __init__(self):
@@ -89,7 +91,7 @@ class NodeMenu(QWidget):
             self.nodes_table.setVerticalHeaderItem(i, QTableWidgetItem(
                 str(nodes[i].number)))
             for j in range(len(node)):
-                self.nodes_table.setItem(i, j, QTableWidgetItem(str(node[j])))
+                self.nodes_table.setItem(i, j, QTableWidgetItem(node[j]))
         if len(nodes) == 0:
             self.delete_button.setEnabled(False)
         else:
@@ -186,7 +188,7 @@ class RodMenu(QWidget):
             self.rods_table.setVerticalHeaderItem(i, QTableWidgetItem(
                 str(rods[i].number)))
             for j in range(len(rod)):
-                self.rods_table.setItem(i, j, QTableWidgetItem(str(rod[j])))
+                self.rods_table.setItem(i, j, QTableWidgetItem(rod[j]))
         if len(rods) == 0:
             self.delete_button.setEnabled(False)
         else:
@@ -224,7 +226,10 @@ class AddRodForm(QWidget):
         first_node = self.first_node_cb.currentIndex()
         second_node = self.second_node_cb.currentIndex()
         EI = int(self.EI_text_field.text())
-
+        if first_node < second_node:
+            buffer = first_node
+            first_node = second_node
+            second_node = buffer
         rods.append(Rod(number, nodes[first_node], nodes[second_node], EI))
         self.menu.update_table()
 
@@ -288,7 +293,7 @@ class LoadsMenu(QWidget):
             self.loads_table.setVerticalHeaderItem(i, QTableWidgetItem(
                 str(loads[i].number)))
             for j in range(len(load)):
-                self.loads_table.setItem(i, j, QTableWidgetItem(str(load[j])))
+                self.loads_table.setItem(i, j, QTableWidgetItem(load[j]))
         if len(loads) == 0:
             self.delete_button.setEnabled(False)
         else:
@@ -340,8 +345,6 @@ class AddLoadForm(QWidget):
 class ResultWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.next_button = QPushButton('')
-        self.back_button = QPushButton('Назад')
 
         self.setWindowTitle('Результаты расчета')
         self.setMinimumSize(800, 600)
@@ -359,8 +362,6 @@ class ResultWindow(QWidget):
 
         box = QVBoxLayout()
         box.addWidget(self.tab_bar)
-        box.addWidget(self.next_button)
-        box.addWidget(self.back_button)
         self.setLayout(box)
 
 
@@ -389,7 +390,7 @@ class GeometryMenu(QWidget):
         for i in range(len(rods)):
             rod = rods[i].toShow()
             self.data_table.setHorizontalHeaderItem(i, QTableWidgetItem(
-                str(rods[i].number)))
+                rods[i].number))
             for j in range(len(rod)):
                 self.data_table.setItem(j, i, QTableWidgetItem(str(rod[j])))
         self.data_table.resizeColumnsToContents()
@@ -420,7 +421,7 @@ class SeparateMatrixTable(QTableWidget):
         self.setRowCount(4)
         for i in range(4):
             for j in range(4):
-                self.setItem(i, j, QTableWidgetItem(str(data[i][j])))
+                self.setItem(i, j, QTableWidgetItem('{:.3f}'.format(data[i][j])))
 
 
 class FullMatrixMenu(QWidget):
@@ -436,37 +437,58 @@ class FullMatrixMenu(QWidget):
 
     def showEvent(self, *args, **kwargs):
         self.data_table.clear()
-        matrix_states = nodes.__len__()*2
+        matrix_states = nodes.__len__() * 2
         self.data_table.setColumnCount(matrix_states)
         self.data_table.setRowCount(matrix_states)
         self.maths = MathClass(nodes, rods, loads)
         data = self.maths.matrix
         for i in range(matrix_states):
             for j in range(matrix_states):
-                self.data_table.setItem(i, j, QTableWidgetItem(str(data[i][j])))
+                self.data_table.setItem(i, j, QTableWidgetItem('{:.3f}'.format(data[i][j])))
 
 
 class ResultMenu(QWidget):
     def __init__(self):
         super().__init__()
-        self.data_table = QTableWidget()
+        self.tab_bar = QTabWidget()
 
         box = QVBoxLayout()
-        box.addWidget(self.data_table)
+        box.addWidget(self.tab_bar)
         self.setLayout(box)
 
-    def update_data_table(self):
-        self.data_table.setColumnCount(2)
-        self.data_table.setHorizontalHeaderLabels(['R', 'N'])
+    def showEvent(self, *args, **kwargs):
+        self.tab_bar.clear()
+        self.maths = MathClass(nodes, rods, loads)
+        for i in range(self.maths.loads.__len__()):
+            self.tab_bar.addTab(ResultLoadWidget(self.maths.load_result_list(
+                i)),
+                str(i+1) + ' загружение')
 
-    # def get_pillar_reaction(self):
-    #     k = 0
-    #     for node in nodes():
-    #         if node.z_connection:
-    #             k += 1
-    #         if node.x_connection:
-    #             k += 1
-    #     return k
+
+class ResultLoadWidget(QTableWidget):
+    def __init__(self, data):
+        super().__init__()
+        load = data['L']
+        motion = data['M']
+        pillar_reaction = data['PR']
+        pillar_reaction_names = data['PRN']
+        efforts = data['E']
+        self.verticalHeader().hide()
+        self.setColumnCount(4)
+        self.setHorizontalHeaderLabels(['Загружение', 'Перемещение', 'Реакция опоры','Внутренние усилия'])
+        self.setRowCount(len(load))
+        for i in range(len(load)):
+            self.setItem(i, 0, QTableWidgetItem('{:.3f}'.format(load[i])))
+            self.setItem(i, 1, QTableWidgetItem('{:.3f}'.format(motion[i])))
+        for i in range(len(pillar_reaction)):
+            pillar_reaction[i] ='{:.3f}'.format(pillar_reaction[i])
+            self.setItem(i, 2, QTableWidgetItem(str(pillar_reaction_names[
+                                                        i])+' = '
+                                                                      ''+str(
+                pillar_reaction[i])))
+        for i in range(len(efforts)):
+            self.setItem(i, 3, QTableWidgetItem('{:.3f}'.format(efforts[i])))
+        self.resizeColumnsToContents()
 
 
 if __name__ == '__main__':

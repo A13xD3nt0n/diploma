@@ -4,7 +4,6 @@ import math_algoritghm
 nodes = list()
 rods = list()
 loads = list()
-results = list()
 
 
 class Node:
@@ -54,28 +53,8 @@ class Node:
         self._mY_load = value
 
     def toList(self):
-        return [self.x, self.y, self.x_connection, self.y_connection]
-
-    #
-    # @x.setter
-    # def x(self, value):
-    #     self._mX = value
-    #
-    # @z.setter
-    # def z(self, value):
-    #     self._mZ = value
-    #
-    # @z_connection.setter
-    # def z_connection(self, value):
-    #     self._mZ_connection = value
-    #
-    # @x_connection.setter
-    # def x_connection(self, value):
-    #     self._mX_connection = value
-    #
-    # @number.setter
-    # def number(self, value):
-    #     self._mNumber = value
+        return [str(self.x), str(self.y), 'Есть' if self.x_connection else '',
+        'Есть' if self.y_connection else '']
 
 
 class Rod:
@@ -131,33 +110,21 @@ class Rod:
         return self._mSeparate_matrix
 
     def toList(self):
-        return [self.first_node.number, self.second_node.number, self._mEI]
+        return [str(self.first_node.number), str(self.second_node.number),
+                str(self._mEI)]
 
     def toShow(self):
-        return [self.l, self.cos, self.sin, self.cos_squared(),
-                self.sin_squared(), self.getSinCos()]
+        return ['{:.3f}'.format(self.l), '{:.3f}'.format(self.cos),
+                '{:.3f}'.format(self.sin),
+                '{:.3f}'.format(self.cos_squared()),
+                '{:.3f}'.format(self.sin_squared()),
+                '{:.3f}'.format(self.getSinCos())]
 
     @property
     def name(self):
         return str(self._mNumber) + 'й элемент [' + str(
             self._mFirst_node.number) + ':' + str(
             self._mSecond_node.number) + ']'
-
-    # @first_node.setter
-    # def x(self, value):
-    #     self._mFirst_node = value
-    #     self._mSin = (self._mSecond_node.z - self._mFirst_node.z) / \
-    #                  (self.sin_squared() + self.cos_squared())
-    #     self._mCos = (self._mSecond_node.x - self._mFirst_node.x) / \
-    #                  (self.sin_squared() + self.cos_squared())
-    #
-    # @second_node.setter
-    # def z(self, value):
-    #     self._mSecond_node = value
-    #     self._mSin = (self._mSecond_node.z - self._mFirst_node.z) / \
-    #                  (self.sin_squared() + self.cos_squared())
-    #     self._mCos = (self._mSecond_node.x - self._mFirst_node.x) / \
-    #                  (self.sin_squared() + self.cos_squared())
 
     def getSinCos(self):
         return self._mCos * self._mSin
@@ -193,15 +160,7 @@ class Load:
         return self._mNode
 
     def toList(self):
-        return [self._mNode.number, self.x, self.y]
-
-    # @x.setter
-    # def x(self, value):
-    #     self._mX = value
-    #
-    # @z.setter
-    # def z(self, value):
-    #     self._mZ = value
+        return [str(self._mNode.number), str(self.x), str(self.y)]
 
 
 class MathClass:
@@ -212,6 +171,7 @@ class MathClass:
         self._mEfforts = list()
         self._mLoads = list()
         self._mPillarColumns = list()
+        self._mPillarColumnsNames = list()
         states = nodes.__len__() * 2
 
         # Построение общей матрицы жесткости
@@ -239,12 +199,21 @@ class MathClass:
 
         # Учет опорных связей
         for node in nodes:
+            buffer = list()
             number = node.number - 1
             if node.x_connection:
+                for i in range(states):
+                    buffer.append(self._mMatrix[i][number * 2])
+                self._mPillarColumns.append(buffer)
                 self._mMatrix[number * 2][number * 2] = math.pow(10, 14)
+                self._mPillarColumnsNames.append('X' + str(number + 1))
+            buffer = list()
             if node.y_connection:
+                for i in range(states):
+                    buffer.append(self._mMatrix[i][number * 2 + 1])
+                self._mPillarColumns.append(buffer)
                 self._mMatrix[number * 2 + 1][number * 2 + 1] = math.pow(10, 14)
-
+                self._mPillarColumnsNames.append('Y' + str(number + 1))
         # Преобразование нагружений
         for load in loads:
             new_load = [0] * states
@@ -267,28 +236,48 @@ class MathClass:
                 k -= 1
             for j in range(buffer_matrix.__len__()):
                 compact_matrix.append(buffer_matrix[j])
-        diag.append(compact_matrix.__len__()+1)
+        diag.append(compact_matrix.__len__() + 1)
 
-        #Добавление одного нуля над диагональю
-        for i in range(diag.__len__()-1):
-            if diag[i+1]-diag[i]==1 and i!=0:
+        # Добавление одного нуля над диагональю
+        for i in range(diag.__len__() - 1):
+            if diag[i + 1] - diag[i] == 1 and i != 0:
                 compact_matrix.insert(diag[i], 0)
-                for j in range(i+1,diag.__len__(),1):
+                for j in range(i + 1, diag.__len__(), 1):
                     diag[j] += 1
-        self._mCompactMatrix =compact_matrix
+        self._mCompactMatrix = compact_matrix
         self._mDiag = diag
 
-        #Расчет узловых перемещений
+        # Расчет узловых перемещений
         for load in self.loads:
             result = math_algoritghm.gaus(states,
-                                                 [None]+self._mCompactMatrix,
-                                                 [None]+load,
-                                                 [None]+self._mDiag, 1)
+                                          [None] + self._mCompactMatrix,
+                                          [None] + load,
+                                          [None] + self._mDiag, 1)
+            result.pop(0)
             self._mMotions.append(result)
 
-        #Расчет u и v
-        for load in self.loads:
-            pass
+        # Опорные реакции
+        for motion in self.motions:
+            buffer = list()
+            for pillar in self._mPillarColumns:
+                summa = 0
+                for i in range(states):
+                    summa += pillar[i] * motion[i]
+                buffer.append(summa)
+            self._mPillarReaction.append(buffer)
+
+        # Усилия в узлах
+        for motion in self.motions:
+            buffer = list()
+            for rod in rods:
+                f_node = rod.first_node.number - 1
+                s_node = rod.second_node.number - 1
+                effort = rod.EI * (((motion[s_node * 2] - motion[
+                    f_node * 2])) * rod.cos + rod.sin * (
+                                               motion[s_node * 2 + 1] - motion[
+                                           f_node * 2 + 1])) / rod.l
+                buffer.append(effort)
+            self._mEfforts.append(buffer)
 
     @property
     def diag(self):
@@ -318,4 +307,11 @@ class MathClass:
     def loads(self):
         return self._mLoads
 
+    @property
+    def pillar_reactions_name(self):
+        return self._mPillarColumnsNames
 
+    def load_result_list(self, index):
+        return {'L': self.loads[index], 'E': self.inner_efforts[index],
+                'M': self.motions[index], 'PR':self.pillar_reactions[index],
+                'PRN':self.pillar_reactions_name}
