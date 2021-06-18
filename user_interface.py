@@ -421,7 +421,8 @@ class SeparateMatrixTable(QTableWidget):
         self.setRowCount(4)
         for i in range(4):
             for j in range(4):
-                self.setItem(i, j, QTableWidgetItem('{:.3f}'.format(data[i][j])))
+                self.setItem(i, j,
+                             QTableWidgetItem('{:.3f}'.format(data[i][j])))
 
 
 class FullMatrixMenu(QWidget):
@@ -444,7 +445,8 @@ class FullMatrixMenu(QWidget):
         data = self.maths.matrix
         for i in range(matrix_states):
             for j in range(matrix_states):
-                self.data_table.setItem(i, j, QTableWidgetItem('{:.3f}'.format(data[i][j])))
+                self.data_table.setItem(i, j, QTableWidgetItem(
+                    '{:.3f}'.format(data[i][j])))
 
 
 class ResultMenu(QWidget):
@@ -462,33 +464,55 @@ class ResultMenu(QWidget):
         for i in range(self.maths.loads.__len__()):
             self.tab_bar.addTab(ResultLoadWidget(self.maths.load_result_list(
                 i)),
-                str(i+1) + ' загружение')
+                str(i + 1) + ' загружение')
 
 
-class ResultLoadWidget(QTableWidget):
+class ResultLoadWidget(QWidget):
     def __init__(self, data):
         super().__init__()
+        self.tab_bar = QTabWidget()
+        self.motion_table = QTableWidget()
+        self.motion_table.setColumnCount(2)
+        print(1)
         load = data['L']
         motion = data['M']
+        self.motion_table.setRowCount(len(load))
+        self.motion_table.setHorizontalHeaderLabels(
+            ['Загружение', 'Перемещение'])
+        for i in range(len(load)):
+            self.motion_table.setItem(i, 0, QTableWidgetItem('{:.3f}'.format(
+                load[i])))
+            self.motion_table.setItem(i, 1, QTableWidgetItem(
+                '{:.3f}'.format(motion[i])))
+        print(2)
         pillar_reaction = data['PR']
         pillar_reaction_names = data['PRN']
-        efforts = data['E']
-        self.verticalHeader().hide()
-        self.setColumnCount(4)
-        self.setHorizontalHeaderLabels(['Загружение', 'Перемещение', 'Реакция опоры','Внутренние усилия'])
-        self.setRowCount(len(load))
-        for i in range(len(load)):
-            self.setItem(i, 0, QTableWidgetItem('{:.3f}'.format(load[i])))
-            self.setItem(i, 1, QTableWidgetItem('{:.3f}'.format(motion[i])))
+        self.pillar_table = QTableWidget()
+        self.pillar_table.setColumnCount(1)
+        self.pillar_table.setRowCount(len(pillar_reaction))
+        self.pillar_table.setHorizontalHeaderLabels(
+            ['Реакция опоры'])
         for i in range(len(pillar_reaction)):
-            pillar_reaction[i] ='{:.3f}'.format(pillar_reaction[i])
-            self.setItem(i, 2, QTableWidgetItem(str(pillar_reaction_names[
-                                                        i])+' = '
-                                                                      ''+str(
-                pillar_reaction[i])))
+            pillar_reaction[i] = '{:.3f}'.format(pillar_reaction[i])
+            self.pillar_table.setItem(i, 0, QTableWidgetItem(str(
+                pillar_reaction_names[i]) + ' = ' + str(pillar_reaction[i])))
+        print(3)
+        efforts = data['E']
+        self.effort_table = QTableWidget()
+        self.effort_table.setColumnCount(1)
+        self.effort_table.setRowCount(len(efforts))
+        self.effort_table.setHorizontalHeaderLabels(['Внутренние усилия'])
+
         for i in range(len(efforts)):
-            self.setItem(i, 3, QTableWidgetItem('{:.3f}'.format(efforts[i])))
-        self.resizeColumnsToContents()
+            self.effort_table.setItem(i, 0, QTableWidgetItem('{:.3f}'.format(
+                efforts[i])))
+
+        self.tab_bar.addTab(self.motion_table, 'Перемещения')
+        self.tab_bar.addTab(self.pillar_table, 'Реакция опоры')
+        self.tab_bar.addTab(self.effort_table, 'Усилия в элементах')
+        box = QVBoxLayout()
+        box.addWidget(self.tab_bar)
+        self.setLayout(box)
 
 
 if __name__ == '__main__':
