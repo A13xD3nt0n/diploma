@@ -66,8 +66,8 @@ def gaus(N, A, R, DIAG, IER):
             A[KN] = A[KN] - S
             print('A['+str(KN)+']='+str(A[KN])+' S='+str(S))
             # TODO -10 degree
-            if A[KN] < math.pow(10, -10):
-                IGAUS = IGAUS + 1
+            if A[KN] <= 0:
+                print('ФУНКЦИЯ ВЫПУКЛА')
                 return
     print('ПРЯМОЙ И ОБРАТНЫЙ ХОД')
     if IER >= 0:

@@ -6,18 +6,69 @@ from PyQt5.QtWidgets import QWidget, QApplication, QCheckBox, QVBoxLayout, \
 from PyQt5.Qt import QIntValidator
 
 
-def load_test():
-    nodes.append(Node(1, 0, 0, True, True))
-    nodes.append(Node(2, 4, 0, False, False))
-    nodes.append(Node(3, 8, 0, False, True))
-    nodes.append(Node(4, 4, 3, False, False))
-    rods.append(Rod(1, nodes[0], nodes[1], 100))
-    rods.append(Rod(2, nodes[1], nodes[2], 100))
-    rods.append(Rod(3, nodes[0], nodes[3], 100))
-    rods.append(Rod(4, nodes[2], nodes[3], 100))
-    rods.append(Rod(5, nodes[1], nodes[3], 100))
-    loads.append(Load(1, nodes[1], 0, -280))
-    loads.append(Load(2, nodes[3], 380, 0))
+def check_rod(f_node, s_node):
+    for rod in rods:
+        numbers = [rod.first_node.number, rod.second_node.number]
+        if f_node in numbers and s_node in numbers:
+            return False
+    return True
+
+
+def load_test(value, sector):
+    if value == 'control':
+        nodes.append(Node(1, 0, 0, True, True))
+        nodes.append(Node(2, 4, 0, False, False))
+        nodes.append(Node(3, 8, 0, False, True))
+        nodes.append(Node(4, 4, 3, False, False))
+        rods.append(Rod(1, nodes[0], nodes[1], 100))
+        rods.append(Rod(2, nodes[1], nodes[2], 100))
+        rods.append(Rod(3, nodes[0], nodes[3], 100))
+        rods.append(Rod(4, nodes[2], nodes[3], 100))
+        rods.append(Rod(5, nodes[1], nodes[3], 100))
+        loads.append(Load(1, nodes[1], 0, -280))
+        loads.append(Load(2, nodes[3], 380, 0))
+    if value == 'gen':
+        for i in range(sector):
+            for j in range(5):
+                for k in range(6):
+                    number = nodes.__len__() + 1
+                    if number % 30 == 1:
+                        nodes.append(Node(number, i * 18 + k * 3, j * 3,
+                                          False, True))
+                    else:
+                        nodes.append(Node(number, i * 18 + k * 3, j * 3,
+                                          False, False))
+                    if j * 3 == 12:
+                        l_number = loads.__len__() + 1
+                        loads.append(Load(l_number, nodes[number - 1], 0, -48))
+        for c in range(5):
+            number = nodes.__len__() + 1
+            if c == 0:
+                nodes.append(Node(number, sector * 18, c * 3, False, True))
+            else:
+                nodes.append(Node(number, sector * 18, c * 3, False, False))
+            if c * 3 == 12:
+                l_number = loads.__len__() + 1
+                loads.append(Load(l_number, nodes[number - 1], 0, -48))
+
+        for d in range(nodes.__len__()):
+            node = nodes[d]
+            for j in range(nodes.__len__()):
+                s_node = nodes[j]
+                x = s_node.x - node.x
+                y = s_node.y - node.y
+                if check_rod(d + 1, j + 1):
+                    if (abs(x) == 3 and abs(y) == 3 and ((d // 6) % 2 ==
+                                                         1) and (d % 2 ==
+                                                                 0)) or (
+                            abs(x) + abs(y) == 3):
+                        r_number = rods.__len__() + 1
+                        if d < j:
+                            rods.append(Rod(r_number, nodes[d], nodes[j],
+                                            10))
+                        else:
+                            rods.append(Rod(r_number, nodes[j], nodes[d],
+                                            10))
 
 
 class MainMenu(QWidget):
@@ -105,6 +156,7 @@ class AddNodeForm(QWidget):
         self.menu = menu
         self.add_button = QPushButton('OK')
         self.add_button.clicked.connect(self.add_node)
+        self.enter_label = QLabel('Введите параметры узла:')
         self.x_label = QLabel('X:')
         self.y_label = QLabel('Y:')
         self.x_textfield = QLineEdit('0')
@@ -116,6 +168,7 @@ class AddNodeForm(QWidget):
         self.y_checkbox = QCheckBox('Y')
 
         box = QVBoxLayout()
+        box.addWidget(self.enter_label)
         box.addWidget(self.x_label)
         box.addWidget(self.x_textfield)
         box.addWidget(self.y_label)
@@ -201,6 +254,7 @@ class AddRodForm(QWidget):
         super().__init__()
         self.menu = menu
         self.add_button = QPushButton('OK')
+        self.enter_label = QLabel('Введите параметры элемента:')
         self.add_button.clicked.connect(self.add_rod)
         self.first_node_label = QLabel('Узел 1:')
         self.second_node_label = QLabel('Узел 2:')
@@ -208,10 +262,11 @@ class AddRodForm(QWidget):
         self.node_index = nodes.__len__()
         self.first_node_cb = QComboBox()
         self.second_node_cb = QComboBox()
-        self.EI_label = QLabel('Жесткостные хар-ки(EI):')
+        self.EI_label = QLabel('Жесткостные характеристики(EI):')
         self.EI_text_field = QLineEdit()
         self.EI_text_field.setValidator(QIntValidator())
         box = QVBoxLayout()
+        box.addWidget(self.enter_label)
         box.addWidget(self.first_node_label)
         box.addWidget(self.first_node_cb)
         box.addWidget(self.second_node_label)
@@ -226,7 +281,7 @@ class AddRodForm(QWidget):
         first_node = self.first_node_cb.currentIndex()
         second_node = self.second_node_cb.currentIndex()
         EI = int(self.EI_text_field.text())
-        if first_node < second_node:
+        if first_node > second_node:
             buffer = first_node
             first_node = second_node
             second_node = buffer
@@ -239,6 +294,8 @@ class AddRodForm(QWidget):
         else:
             self.add_button.setEnabled(True)
         if self.node_index != nodes.__len__():
+            self.first_node_cb.clear()
+            self.second_node_cb.clear()
             for node in nodes:
                 self.first_node_cb.addItem(str(node.number))
                 self.second_node_cb.addItem(str(node.number))
@@ -306,6 +363,7 @@ class AddLoadForm(QWidget):
         super().__init__()
         self.menu = menu
         self.add_button = QPushButton('OK')
+        self.enter_label = QLabel('Введите параметры узловой нагрузки:')
         self.add_button.clicked.connect(self.add_load)
         self.node_label = QLabel('Узел:')
         self.x_label = QLabel('X:')
@@ -319,6 +377,7 @@ class AddLoadForm(QWidget):
         self.node_cb = QComboBox()
 
         box = QVBoxLayout()
+        box.addWidget(self.enter_label)
         box.addWidget(self.node_label)
         box.addWidget(self.node_cb)
         box.addWidget(self.x_label)
@@ -379,18 +438,16 @@ class GeometryMenu(QWidget):
         box = QVBoxLayout()
         box.addWidget(self.data_table)
         self.setLayout(box)
-        self.update_data_table()
 
     def showEvent(self, *args, **kwargs):
-        if self.rod_index != len(rods):
-            self.update_data_table()
+        self.update_data_table()
 
     def update_data_table(self):
         self.data_table.setColumnCount(rods.__len__())
         for i in range(len(rods)):
             rod = rods[i].toShow()
             self.data_table.setHorizontalHeaderItem(i, QTableWidgetItem(
-                rods[i].number))
+                str(rods[i].name)))
             for j in range(len(rod)):
                 self.data_table.setItem(j, i, QTableWidgetItem(str(rod[j])))
         self.data_table.resizeColumnsToContents()
@@ -441,8 +498,8 @@ class FullMatrixMenu(QWidget):
         matrix_states = nodes.__len__() * 2
         self.data_table.setColumnCount(matrix_states)
         self.data_table.setRowCount(matrix_states)
-        self.maths = MathClass(nodes, rods, loads)
-        data = self.maths.matrix
+        maths = MathClass(nodes, rods, loads)
+        data = maths.matrix
         for i in range(matrix_states):
             for j in range(matrix_states):
                 self.data_table.setItem(i, j, QTableWidgetItem(
@@ -460,9 +517,9 @@ class ResultMenu(QWidget):
 
     def showEvent(self, *args, **kwargs):
         self.tab_bar.clear()
-        self.maths = MathClass(nodes, rods, loads)
-        for i in range(self.maths.loads.__len__()):
-            self.tab_bar.addTab(ResultLoadWidget(self.maths.load_result_list(
+        maths = MathClass(nodes, rods, loads)
+        for i in range(maths.loads.__len__()):
+            self.tab_bar.addTab(ResultLoadWidget(maths.load_result_list(
                 i)),
                 str(i + 1) + ' загружение')
 
@@ -517,7 +574,9 @@ class ResultLoadWidget(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    load_test()
+    value = 'gen'
+    sector = 2
+    load_test(value, sector)
     starter_menu = MainMenu()
     starter_menu.show()
     sys.exit(app.exec_())

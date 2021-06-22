@@ -1,5 +1,8 @@
 import math
+import numpy as np
 import math_algoritghm
+import time
+import sys
 
 nodes = list()
 rods = list()
@@ -221,7 +224,7 @@ class MathClass:
             new_load[number * 2] = load.x
             new_load[number * 2 + 1] = load.y
             self._mLoads.append(new_load)
-
+        print(np.linalg.det(self.matrix))
         # Формирование компактной формы матрицы жесткости
         compact_matrix = list()
         diag = list()
@@ -278,6 +281,30 @@ class MathClass:
                                            f_node * 2 + 1])) / rod.l
                 buffer.append(effort)
             self._mEfforts.append(buffer)
+
+        # Исследование
+        # self._mLoads = [[0,-240,0,-240,0,0,0,-240,0,0]]
+        print('КОЛИЧЕСТВО СТЕПЕНЕЙ СВОБОДЫ:'+str(states))
+        start_time = time.clock()
+        math_algoritghm.gaus(states,
+                             [None] + self._mCompactMatrix,
+                             [None] + self.loads[0],
+                             [None] + self._mDiag, 1)
+        print('ВРЕМЯ РАСЧЕТА КОМПАКТНЫМ МЕТОДОМ:' + str(time.clock() -
+                                                        start_time))
+        start_time = time.clock()
+        math_algoritghm.decise_numpy(self.matrix, self.loads[0])
+        print('ВРЕМЯ РАСЧЕТА ОБЫЧНЫМ МЕТОДОМ:' + str(time.clock() - start_time))
+        s = 0
+        for strike in self.matrix:
+            s += sys.getsizeof(strike)
+        print('ОБЪЕМ ПАМЯТИ НЕКОМПАКТНОЙ ФОРМЫ:' + str(
+            sys.getsizeof(self.matrix)+s))
+        print('ОБЪЕМ ПАМЯТИ КОМПАКТНОЙ ФОРМЫ:' +str(sys.getsizeof(
+            self.compact_matrix)+sys.getsizeof(self.diag)))
+
+
+
 
     @property
     def diag(self):
