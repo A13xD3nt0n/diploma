@@ -1,12 +1,44 @@
 import math
-import numpy as np
 import math_algoritghm
 import time
 import sys
+import json
 
 nodes = list()
 rods = list()
 loads = list()
+
+
+class InputData:
+    nodes = list()
+    rods = list()
+    loads = list()
+
+    @staticmethod
+    def add_node(x, y, x_connection,
+                 y_connection):
+        number = len(nodes) + 1
+        nodes.append(Node(number, x, y, x_connection, y_connection))
+
+    @staticmethod
+    def add_rod(first_node_number, second_node_number, EI):
+        number = len(rods) + 1
+        rods.append(Rod(number, nodes[first_node_number - 1], nodes[
+            second_node_number - 1], EI))
+
+    @staticmethod
+    def add_load(node, x, y):
+        number = len(loads) + 1
+        loads.append(Load(number, node, x, y))
+
+    @staticmethod
+    def load_input_data():
+        pass
+
+    @staticmethod
+    def is_ready():
+        return True if len(loads) != 0 and len(rods) != 0 and len(nodes) != 0 \
+            else False
 
 
 class Node:
@@ -16,8 +48,6 @@ class Node:
         self._mY = y
         self._mX_connection = x_connection
         self._mY_connection = y_connection
-        self._mX_load = 0
-        self._mY_load = 0
 
     @property
     def x(self):
@@ -39,25 +69,9 @@ class Node:
     def y_connection(self):
         return self._mY_connection
 
-    @property
-    def x_load(self):
-        return self._mX_load
-
-    @property
-    def y_load(self):
-        return self._mY_load
-
-    @x_load.setter
-    def x_load(self, value):
-        self._mX_load = value
-
-    @y_load.setter
-    def y_load(self, value):
-        self._mY_load = value
-
     def toList(self):
         return [str(self.x), str(self.y), 'Есть' if self.x_connection else '',
-        'Есть' if self.y_connection else '']
+                'Есть' if self.y_connection else '']
 
 
 class Rod:
@@ -66,17 +80,21 @@ class Rod:
         self._mFirst_node = first_node
         self._mSecond_node = second_node
         self._mEI = EI
+
         self._mL = math.sqrt(
             math.pow((self._mSecond_node.y - self._mFirst_node.y),
                      2) + math.pow((self._mSecond_node.x -
                                     self._mFirst_node.x), 2))
+        print(self._mFirst_node.x)
         self._mSin = (self._mSecond_node.y - self._mFirst_node.y) / \
                      self._mL
         self._mCos = (self._mSecond_node.x - self._mFirst_node.x) / \
                      self._mL
+
         C2 = self._mEI * self.cos_squared() / self._mL
         S2 = self._mEI * self.sin_squared() / self._mL
         CS = self._mEI * self.getSinCos() / self._mL
+
         self._mSeparate_matrix = [[C2, CS, -C2, -CS], [CS, S2, -CS, -S2],
                                   [-C2, -CS, C2, CS], [-CS, -S2, CS, S2]]
 
@@ -217,6 +235,7 @@ class MathClass:
                 self._mPillarColumns.append(buffer)
                 self._mMatrix[number * 2 + 1][number * 2 + 1] = math.pow(10, 14)
                 self._mPillarColumnsNames.append('Y' + str(number + 1))
+
         # Преобразование нагружений
         for load in loads:
             new_load = [0] * states
@@ -224,11 +243,14 @@ class MathClass:
             new_load[number * 2] = load.x
             new_load[number * 2 + 1] = load.y
             self._mLoads.append(new_load)
-        print(np.linalg.det(self.matrix))
+        print(5)
         # Формирование компактной формы матрицы жесткости
+        start_time = time.clock()
         compact_matrix = list()
         diag = list()
         for i in range(states):
+            print(compact_matrix)
+            print(self._mMatrix)
             diag.append(compact_matrix.__len__() + 1)
             buffer_matrix = list()
             for j in range(i, -1, -1):
@@ -240,7 +262,7 @@ class MathClass:
             for j in range(buffer_matrix.__len__()):
                 compact_matrix.append(buffer_matrix[j])
         diag.append(compact_matrix.__len__() + 1)
-
+        print(6)
         # Добавление одного нуля над диагональю
         for i in range(diag.__len__() - 1):
             if diag[i + 1] - diag[i] == 1 and i != 0:
@@ -249,7 +271,7 @@ class MathClass:
                     diag[j] += 1
         self._mCompactMatrix = compact_matrix
         self._mDiag = diag
-
+        print(7)
         # Расчет узловых перемещений
         for load in self.loads:
             result = math_algoritghm.gaus(states,
@@ -258,7 +280,12 @@ class MathClass:
                                           [None] + self._mDiag, 1)
             result.pop(0)
             self._mMotions.append(result)
-
+        print('ВРЕМЯ РАСЧЕТА КОМПАКТНЫМ МЕТОДОМ:' + str(time.clock() -
+                                                        start_time))
+        start_time = time.clock()
+        for load in self.loads:
+            math_algoritghm.decise_numpy(self.matrix, load)
+        print('ВРЕМЯ РАСЧЕТА ОБЫЧНЫМ МЕТОДОМ:' + str(time.clock() - start_time))
         # Опорные реакции
         for motion in self.motions:
             buffer = list()
@@ -277,34 +304,20 @@ class MathClass:
                 s_node = rod.second_node.number - 1
                 effort = rod.EI * (((motion[s_node * 2] - motion[
                     f_node * 2])) * rod.cos + rod.sin * (
-                                               motion[s_node * 2 + 1] - motion[
-                                           f_node * 2 + 1])) / rod.l
+                                           motion[s_node * 2 + 1] - motion[
+                                       f_node * 2 + 1])) / rod.l
                 buffer.append(effort)
             self._mEfforts.append(buffer)
 
         # Исследование
-        # self._mLoads = [[0,-240,0,-240,0,0,0,-240,0,0]]
-        print('КОЛИЧЕСТВО СТЕПЕНЕЙ СВОБОДЫ:'+str(states))
-        start_time = time.clock()
-        math_algoritghm.gaus(states,
-                             [None] + self._mCompactMatrix,
-                             [None] + self.loads[0],
-                             [None] + self._mDiag, 1)
-        print('ВРЕМЯ РАСЧЕТА КОМПАКТНЫМ МЕТОДОМ:' + str(time.clock() -
-                                                        start_time))
-        start_time = time.clock()
-        math_algoritghm.decise_numpy(self.matrix, self.loads[0])
-        print('ВРЕМЯ РАСЧЕТА ОБЫЧНЫМ МЕТОДОМ:' + str(time.clock() - start_time))
+        print('КОЛИЧЕСТВО СТЕПЕНЕЙ СВОБОДЫ:' + str(states))
         s = 0
         for strike in self.matrix:
             s += sys.getsizeof(strike)
         print('ОБЪЕМ ПАМЯТИ НЕКОМПАКТНОЙ ФОРМЫ:' + str(
-            sys.getsizeof(self.matrix)+s))
-        print('ОБЪЕМ ПАМЯТИ КОМПАКТНОЙ ФОРМЫ:' +str(sys.getsizeof(
-            self.compact_matrix)+sys.getsizeof(self.diag)))
-
-
-
+            sys.getsizeof(self.matrix) + s))
+        print('ОБЪЕМ ПАМЯТИ КОМПАКТНОЙ ФОРМЫ:' + str(sys.getsizeof(
+            self.compact_matrix) + sys.getsizeof(self.diag)))
 
     @property
     def diag(self):
@@ -340,5 +353,5 @@ class MathClass:
 
     def load_result_list(self, index):
         return {'L': self.loads[index], 'E': self.inner_efforts[index],
-                'M': self.motions[index], 'PR':self.pillar_reactions[index],
-                'PRN':self.pillar_reactions_name}
+                'M': self.motions[index], 'PR': self.pillar_reactions[index],
+                'PRN': self.pillar_reactions_name}

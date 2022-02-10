@@ -1,10 +1,18 @@
 import math
 import numpy
-from openpyxl import load_workbook
+# import torch
 
 
 def decise_numpy(A, R):
     result = numpy.linalg.solve(A, R)
+    return result
+
+def decise_cuda(A, R):
+    torch.cuda.init()
+    print(torch.cuda.is_available())
+    x = torch.Tensor(A).to(device)
+    y = torch.Tensor(R).to(device)
+    result = x * y
     return result
 
 
@@ -12,12 +20,6 @@ def gaus(N, A, R, DIAG, IER):
     # IER = -1 - BЫПOЛHЯETCЯ TOЛЬKO TPEУГOЛЬHOE PAЗЛOЖEHИE MATPИЦЫ A
     # IER = 0 - OБPATHЫЙ XOД ПO ПPABЫM ЧACTЯM
     # IER = 1 - ПPЯMOЙ И OБPATHЫЙ XOД
-    IGAUS = 0
-    print('N='+str(N))
-    print('A='+str(A))
-    print('R='+str(R))
-    print('DIAG='+str(DIAG))
-    print('IER='+str(IER))
     if IER != 0:
         for I in range(1, N + 1):
             print('I = ' + str(I))
@@ -26,7 +28,7 @@ def gaus(N, A, R, DIAG, IER):
             KU = DIAG[I + 1] - 1  # индекс элемента перед диагональным
             KH = KU - KL  # если больше 0 нет элементов между диагональными
             print("KH = " + str(KH))
-            if KH > 0:
+            if KH >= 0:
                 K = I - KH # Индекс элемента
                 IC = 0
                 KLT = KU
@@ -48,7 +50,8 @@ def gaus(N, A, R, DIAG, IER):
                                 ' KLT=' + str(KLT))
                             S = S + A[KI + L] * A[KLT + L]
                         A[KLT] = A[KLT] - S
-                        print('S='+str(S))
+                        print('A['+str(KLT)+']='+str(A[KLT]))
+                        print(A)
                         K = K + 1
             KK = I
             S = 0
@@ -66,7 +69,8 @@ def gaus(N, A, R, DIAG, IER):
             A[KN] = A[KN] - S
             print('A['+str(KN)+']='+str(A[KN])+' S='+str(S))
             # TODO -10 degree
-            if A[KN] <= 0:
+            if A[KN] < math.pow(10, -25):
+                print('A['+str(KN)+']='+str(A[KN]))
                 print('ФУНКЦИЯ ВЫПУКЛА')
                 return
     print('ПРЯМОЙ И ОБРАТНЫЙ ХОД')
@@ -75,7 +79,6 @@ def gaus(N, A, R, DIAG, IER):
             print('Ir='+str(I))
             KL = DIAG[I] + 1
             KU = DIAG[I + 1] - 1
-            print('KU='+str(KU)+' KL='+str(KL))
             if KU >= KL:
                 K = I
                 S = 0
@@ -125,10 +128,14 @@ if __name__ == '__main__':
     # R = [None, 0, 0, 0, -280, 0, 0, 0, 0]
     # DIAG = [None, 1, 2, 4, 7, 9, 12, 14, 21, 29]
     IER = 1
-    # R = [None, 0, 1, 0, 0, 0]
-    # A = [None, 2, 3, -2, 5, -2, 10, -3, 10, 4, 0, 0, -1]
-    # DIAG = [None, 1, 2, 4, 6, 8, A.__len__()]
-    # N = 5
+    R = [None, 0, 1, 0, 0, 0]
+    A = [None, 2, 3, -2, 5, -2, 10, -3, 10, 4, 0, 0, -1]
+    DIAG = [None, 1, 2, 4, 6, 8, A.__len__()]
+    N = 5
+    # R = [0, 1, 0, 0, 0]
+    # A = [[2, -2, 0, 0, -1], [-2, 3, -2, 0, 0], [0, -2, 5, -3, 0],[0,0,-3,10,
+    #                                                               4],[-1, 0,
+    #                                                                   0, 4, 10]]
     # N = 8
     # A = [None, math.pow(10,18), 320, 96,   math.pow(10,18) ,-96,-38.4,
     #      2320, 654,  160,  96.,math.pow(10,18), -750, -375,  6000, 750, 1000,
@@ -136,32 +143,10 @@ if __name__ == '__main__':
     # R = [None, 222, 25,   444,  50,  666,    40,   64,  38]
     # DIAG = [None, 1,2,4,7,11,14,18,21,25]
     print('A=' + str(A) + ' R=' + str(R) + ' DIAG=' + str(DIAG))
+    print((decise_cuda(A, R)))
     result = gaus(N=N,
                   A=A,
                   R=R,
                   DIAG=DIAG,
                   IER=1)
-    # wb = load_workbook('./123.xlsx')
-    #
-    # sheet = wb['Матрица жесткости']
-    # cell_range = sheet['S19':'Z26']
-    # A = list()
-    # for row in cell_range:
-    #     input = [r.value for r in row]
-    #     A.append(input)
-    # A[0][0] = math.pow(10,14)
-    # A[1][1] = math.pow(10,14)
-    # A[5][5] = math.pow(10,14)
-    # cell_range = sheet['M24':'M31']
-    # R = list()
-    # for row in cell_range:
-    #     input = [r.value for r in row]
-    #     R.append(input)
-    # print('Вектор Z1: ' +str(decise_numpy(A,R)))
-    # cell_range = sheet['O24':'O31']
-    # R = list()
-    # for row in cell_range:
-    #     input = [r.value for r in row]
-    #     R.append(input)
-    # print('Вектор Z2: ' + str(decise_numpy(A, R)))
     print('R = ' + str(result))

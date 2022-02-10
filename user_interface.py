@@ -1,5 +1,6 @@
 import sys
-from data_models import Node, Rod, Load, nodes, rods, loads, MathClass
+from data_models import Node, Rod, Load, nodes, rods, loads, MathClass, \
+    InputData
 from PyQt5.QtWidgets import QWidget, QApplication, QCheckBox, QVBoxLayout, \
     QPushButton, QTableWidget, QLabel, QLineEdit, QTableWidgetItem, \
     QTabWidget, QComboBox
@@ -58,9 +59,10 @@ def load_test(value, sector):
                 x = s_node.x - node.x
                 y = s_node.y - node.y
                 if check_rod(d + 1, j + 1):
-                    if (abs(x) == 3 and abs(y) == 3 and ((d // 6) % 2 ==
-                                                         1) and (d % 2 ==
-                                                                 0)) or (
+                    if (abs(x) == 3 and abs(y) == 3 and
+                        (((node.x % 2 == 1) and (node.y % 2 == 1)) or (
+                                s_node.x % 2 == 1) and (
+                                 s_node.y % 2 == 1))) or (
                             abs(x) + abs(y) == 3):
                         r_number = rods.__len__() + 1
                         if d < j:
@@ -93,6 +95,12 @@ class MainMenu(QWidget):
         self.main_layout.addWidget(self.tab_bar)
         self.main_layout.addWidget(self.calculate_button)
         self.setLayout(self.main_layout)
+
+    # def changeEvent(self, *args, **kwargs):
+    #     if nodes.__len__() == 0 or rods.__len__() == 0 or loads.__len__() == 0:
+    #         self.calculate_button.setEnabled(False)
+    #     else:
+    #         self.calculate_button.setEnabled(True)
 
     def show_result(self):
         self.result_window.show()
@@ -188,6 +196,7 @@ class AddNodeForm(QWidget):
         for node in nodes:
             if (node.y == y) and (node.x == x):
                 return
+        # InputData.add_node()
         nodes.append(Node(number, x, y, x_connection, y_connection))
         self.menu.update_table()
 
@@ -208,7 +217,7 @@ class RodMenu(QWidget):
 
         self.rods_table = QTableWidget()
         self.rods_table.setColumnCount(3)
-        self.rods_table.setHorizontalHeaderLabels(['Узел 1', 'Узел 2', 'EI'])
+        self.rods_table.setHorizontalHeaderLabels(['Узел 1', 'Узел 2', 'EА'])
 
         box = QVBoxLayout()
         box.addWidget(self.add_button)
@@ -225,7 +234,7 @@ class RodMenu(QWidget):
         self.update_table()
 
     def showEvent(self, *args, **kwargs) -> None:
-        if nodes.__len__() == 0:
+        if nodes.__len__() < 2:
             self.add_button.setEnabled(False)
         else:
             self.add_button.setEnabled(True)
@@ -262,9 +271,13 @@ class AddRodForm(QWidget):
         self.node_index = nodes.__len__()
         self.first_node_cb = QComboBox()
         self.second_node_cb = QComboBox()
-        self.EI_label = QLabel('Жесткостные характеристики(EI):')
-        self.EI_text_field = QLineEdit()
+        self.first_node_cb.currentIndexChanged.connect(self.addNumber)
+        self.second_node_cb.currentIndexChanged.connect(self.addNumber)
+
+        self.EI_label = QLabel('Жесткостные характеристики(EA):')
+        self.EI_text_field = QLineEdit('1')
         self.EI_text_field.setValidator(QIntValidator())
+
         box = QVBoxLayout()
         box.addWidget(self.enter_label)
         box.addWidget(self.first_node_label)
@@ -278,27 +291,28 @@ class AddRodForm(QWidget):
 
     def add_rod(self):
         number = rods.__len__() + 1
-        first_node = self.first_node_cb.currentIndex()
-        second_node = self.second_node_cb.currentIndex()
+        first_node = int(self.first_node_cb.currentText())
+        second_node = int(self.second_node_cb.currentText())
         EI = int(self.EI_text_field.text())
         if first_node > second_node:
             buffer = first_node
             first_node = second_node
             second_node = buffer
-        rods.append(Rod(number, nodes[first_node], nodes[second_node], EI))
+        rods.append(Rod(number, nodes[first_node-1], nodes[second_node-1], EI))
         self.menu.update_table()
 
+    def addNumber(self):
+        pass
+
     def changeEvent(self, *args, **kwargs):
-        if nodes.__len__() == 0:
-            self.add_button.setEnabled(False)
-        else:
-            self.add_button.setEnabled(True)
         if self.node_index != nodes.__len__():
             self.first_node_cb.clear()
             self.second_node_cb.clear()
+            numbers = list()
             for node in nodes:
-                self.first_node_cb.addItem(str(node.number))
-                self.second_node_cb.addItem(str(node.number))
+                numbers += [str(node.number)]
+            self.first_node_cb.addItems(numbers)
+            self.second_node_cb.addItems(numbers[1:])
 
 
 class LoadsMenu(QWidget):
@@ -397,6 +411,7 @@ class AddLoadForm(QWidget):
 
     def changeEvent(self, *args, **kwargs):
         if self.node_index != nodes.__len__():
+            self.node_cb.clear()
             for node in nodes:
                 self.node_cb.addItem(str(node.number))
 
@@ -530,7 +545,6 @@ class ResultLoadWidget(QWidget):
         self.tab_bar = QTabWidget()
         self.motion_table = QTableWidget()
         self.motion_table.setColumnCount(2)
-        print(1)
         load = data['L']
         motion = data['M']
         self.motion_table.setRowCount(len(load))
@@ -541,7 +555,6 @@ class ResultLoadWidget(QWidget):
                 load[i])))
             self.motion_table.setItem(i, 1, QTableWidgetItem(
                 '{:.3f}'.format(motion[i])))
-        print(2)
         pillar_reaction = data['PR']
         pillar_reaction_names = data['PRN']
         self.pillar_table = QTableWidget()
@@ -553,7 +566,6 @@ class ResultLoadWidget(QWidget):
             pillar_reaction[i] = '{:.3f}'.format(pillar_reaction[i])
             self.pillar_table.setItem(i, 0, QTableWidgetItem(str(
                 pillar_reaction_names[i]) + ' = ' + str(pillar_reaction[i])))
-        print(3)
         efforts = data['E']
         self.effort_table = QTableWidget()
         self.effort_table.setColumnCount(1)
@@ -563,6 +575,7 @@ class ResultLoadWidget(QWidget):
         for i in range(len(efforts)):
             self.effort_table.setItem(i, 0, QTableWidgetItem('{:.3f}'.format(
                 efforts[i])))
+        self.effort_table.resizeColumnsToContents()
 
         self.tab_bar.addTab(self.motion_table, 'Перемещения')
         self.tab_bar.addTab(self.pillar_table, 'Реакция опоры')
@@ -574,8 +587,8 @@ class ResultLoadWidget(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    value = 'gen'
-    sector = 2
+    value = 'control'
+    sector = 1
     load_test(value, sector)
     starter_menu = MainMenu()
     starter_menu.show()
